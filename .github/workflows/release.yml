@@ -33,8 +33,8 @@ jobs:
           echo "RELEASE_VERSION=${{ github.run_number }}" >> $GITHUB_ENV
 
       - run: |
-          git checkout -b release/$RELEASE_VERSION
-          git push origin release/$RELEASE_VERSION
+          git checkout -b release/${{ env.RELEASE_VERSION }}
+          git push origin release/${{ env.RELEASE_VERSION }}
 
       - run: |
-          docker build -t cr.yandex/${{ vars.CR_ID }}/app:$RELEASE_VERSION -t cr.yandex/${{ vars.CR_ID }}/app:$RELEASE_VERSION_latest .
+          docker build -t cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }} -t cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }}_latest .
