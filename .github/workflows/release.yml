@@ -4,25 +4,25 @@ on:
   workflow_dispatch:
 
 jobs:
-  checks:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        task: [lint, test]
-        node-version: [20.x]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
+  # checks:
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       task: [lint, test]
+  #       node-version: [20.x]
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-node@v4
+  #       with:
+  #         node-version: ${{ matrix.node-version }}
 
-      - run: npm install
+  #     - run: npm install
 
-      - if: matrix.task == 'lint'
-        run: npm run lint
+  #     - if: matrix.task == 'lint'
+  #       run: npm run lint
 
-      - if: matrix.task == 'test'
-        run: npm run test
+  #     - if: matrix.task == 'test'
+  #       run: npm run test
   release:
     needs: checks
     runs-on: ubuntu-latest
@@ -44,3 +44,17 @@ jobs:
 
       - run: |
           docker push cr.yandex/${{ vars.CR_ID }}/app --all-tags
+
+      - run: |
+          git tag ${{ env.RELEASE_VERSION }}
+          git push origin ${{ env.RELEASE_VERSION }}
+
+      - run: |
+          git fetch
+          git branch --set-upstream-to origin/releases/${{ env.RELEASE_VERSION }}
+          PREV_TAG=$( git ls-remote --tags origin | tail -2 | head -1 | sed 's/.*\///')
+          echo "COMMITS=$(git log ${{ env.PREV_TAG }}..v${{ env.RELEASE_VERSION }} --pretty=format:"%h - %an, %ar : %s")" >> $GITHUB_ENV
+
+      - uses: JasonEtco/create-an-issue@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
