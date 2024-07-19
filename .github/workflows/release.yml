@@ -24,61 +24,64 @@ jobs:
       - if: matrix.task == 'test'
         run: npm run test
   release:
-    needs: checks
+    needs: [checks]
     runs-on: ubuntu-latest
     steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
       - name: Get release version
+        id: get_version
         run: |
-          echo "RELEASE_VERSION=${{ github.run_number }}" >> $GITHUB_ENV
+          VERSION_MAJOR=1
+          VERSION_MINOR=0
+          VERSION_PATCH=${{ github.run_number }}
+          echo "RELEASE_VERSION=${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" >> $GITHUB_ENV
 
-      - name: Push release branch
+      - name: Create release branch
         run: |
-          git checkout -b release/${{ env.RELEASE_VERSION }}
-          git push origin release/${{ env.RELEASE_VERSION }}
+          git checkout -b releases/${{ env.RELEASE_VERSION }}
+          git push origin releases/${{ env.RELEASE_VERSION }}
 
-      - name: Login to Yandex registry
-        run: |
-          echo "${{ secrets.YANDEX_TOKEN }}" | docker login --username oauth --password-stdin cr.yandex
+      - name: Log in to Container Registry
+        run: echo "${{ secrets.OAUTH_TOKEN }}" | docker login --username oauth --password-stdin cr.yandex
 
-      - name: Build and push Docker
+      - name: Build Docker image
+        run: docker build --platform=linux/amd64 -t cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }} .
+
+      - name: Tag Docker image with latest
+        run: docker tag cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }} cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }}_latest
+
+      - name: Push Docker image
         run: |
-          docker build -t cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }} -t cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }}_latest .
-          docker push cr.yandex/${{ vars.CR_ID }}/app --all-tags
+          docker push cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }}
+          docker push cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }}_latest
 
       - name: Configure Git
         run: |
-          git config --global user.email "rinat.rafikov5@yandex.ru"
-          git config --global user.name "rinatRafikov"
+          git config --global user.email "nchertolin@gmail.com"
+          git config --global user.name "nchertolin"
 
       - name: Get previous release tag
         id: get_prev_tag
         run: echo "PREV_TAG=$( git ls-remote --tags origin | tail -2 | head -1 | sed 's/.*\///')" >> $GITHUB_ENV
 
-      - name: Add tag and push
+      - name: Create GitHub release tag
         run: |
           git tag -a v${{ env.RELEASE_VERSION }} -m "release ${{ env.RELEASE_VERSION }}"
           git push origin v${{ env.RELEASE_VERSION }}
 
-      - name: Get previous tag commits
+      - name: Get commit list
+        id: get_commit_list
         run: |
           git fetch
           git branch --set-upstream-to origin/releases/${{ env.RELEASE_VERSION }}
           echo "COMMITS=$(git log ${{ env.PREV_TAG }}..v${{ env.RELEASE_VERSION }} --pretty=format:"%h - %an, %ar : %s")" >> $GITHUB_ENV
 
-      - name: Set date as env variable
-        run: echo "NOW=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
-
-      - name: Create issue
-        uses: dacbd/create-issue-action@main
-        with:
-          token: ${{ github.token }}
-          title: Release ${{github.run_number}}
-          body: |
-            - Date: ${{env.NOW}}
-            - Author: ${{ github.triggering_actor }}
-            - Version: ${{ github.run_number }}
-            - Commits: ${{ env.COMMITS }}
-            - YC Docker: cr.yandex/${{ vars.CR_ID }}/app:${{ github.run_number }}
+      - name: Create release issue
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          gh issue create --title "Release v${{ env.RELEASE_VERSION }}" --body "**Date:** ${{ github.event
+          .created_at}}<br>**Author:** ${{ github.actor }}<br>**Version:** ${{ env.RELEASE_VERSION 
+          }}<br>**Commits:**<br>${{ env.COMMITS }}<br>**Docker Image:** cr.yandex/${{ vars.CR_ID }}/app:${{ env
+          .RELEASE_VERSION }}"
