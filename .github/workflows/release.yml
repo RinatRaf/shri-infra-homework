@@ -53,8 +53,10 @@ jobs:
           git tag v${{ env.RELEASE_VERSION }}
           git push origin v${{ env.RELEASE_VERSION }}
 
-      - name: Git Checkout
-        uses: actions/checkout@v4
+      - name: Set git config
+        run: |
+          git config --global user.email "rinat.rafikov5@yandex.ru"
+          git config --global user.name "rinat.rafikov"
 
       - name: Get previous tag
         run: |
