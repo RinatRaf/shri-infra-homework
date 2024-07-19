@@ -63,6 +63,18 @@ jobs:
         run: |
           echo "COMMITS=$(git log --pretty=format:"%h - %s" $PREV_TAG..HEAD)" >> $GITHUB_ENV
 
+      - name: Get previous tag commits
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 || true)
+
+          if [ "$LATEST_TAG" = "" ]; then
+            COMMIT_LOG=$(git log HEAD)
+            echo "Gathering commit log from head"
+          else 
+            COMMIT_LOG=$(git log $LATEST_TAG..HEAD)
+            echo "Gathering commit log from $LATEST_TAG to HEAD"
+          fi
+
       - name: Set date as env variable
         run: echo "NOW=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
 
@@ -75,5 +87,5 @@ jobs:
             - Date: ${{env.NOW}}
             - Author: ${{ github.triggering_actor }}
             - Version: ${{ github.run_number }}
-            - Commits: ${{ env.COMMITS }}
+            - Commits: ${{ env.COMMIT_LOG }}
             - YC Docker: cr.yandex/${{ vars.CR_ID }}/app:${{ github.run_number }}
