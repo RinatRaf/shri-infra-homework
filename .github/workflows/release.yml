@@ -31,7 +31,6 @@ jobs:
 
       - run: |
           echo "RELEASE_VERSION=${{ github.run_number }}" >> $GITHUB_ENV
-          shell: bash
 
       - run: |
           git checkout -b release/$RELEASE_VERSION
