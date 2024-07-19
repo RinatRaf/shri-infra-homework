@@ -54,9 +54,7 @@ jobs:
           git push origin v${{ env.RELEASE_VERSION }}
 
       - name: Set git config
-        run: |
-          git config --global user.email "rinat.rafikov5@yandex.ru"
-          git config --global user.name "rinat.rafikov"
+        run: git config advice.setUpstreamFailure false
 
       - name: Get previous tag
         run: |
