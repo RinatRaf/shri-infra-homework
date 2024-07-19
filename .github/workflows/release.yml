@@ -43,7 +43,7 @@ jobs:
           git push origin releases/${{ env.RELEASE_VERSION }}
 
       - name: Log in to Container Registry
-        run: echo "${{ secrets.OAUTH_TOKEN }}" | docker login --username oauth --password-stdin cr.yandex
+        run: echo "${{ secrets.YANDEX_TOKEN }}" | docker login --username oauth --password-stdin cr.yandex
 
       - name: Build Docker image
         run: docker build --platform=linux/amd64 -t cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }} .
