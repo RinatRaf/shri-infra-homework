@@ -64,7 +64,17 @@ jobs:
         run: |
           echo "COMMITS=$(git log ${{ steps.previoustag.outputs.tag }}..v${{ env.RELEASE_VERSION }} --pretty=format:"%h - %an, %ar : %s")" >> $GITHUB_ENV
 
+      - name: Set date as env variable
+        run: echo "NOW=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
+
       - name: Create issue
-        uses: JasonEtco/create-an-issue@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: dacbd/create-issue-action@main
+        with:
+          token: ${{ github.token }}
+          title: Release ${{github.run_number}}
+          body: |
+            - Date: ${{env.NOW}}
+            - Author: ${{ github.triggering_actor }}
+            - Version: ${{ github.run_number }}
+            - Commits: ${{ env.COMMITS }}
+            - YC Docker: cr.yandex/${{ vars.CR_ID }}/app:${{ github.run_number }}
