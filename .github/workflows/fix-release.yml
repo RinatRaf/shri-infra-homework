@@ -1,4 +1,4 @@
-name: Release
+name: Fix Release
 
 on:
   workflow_dispatch:
@@ -27,17 +27,15 @@ jobs:
 
       - if: matrix.task == 'test'
         run: npm run test
-  release:
+  fix-release:
     needs: [checks]
     runs-on: ubuntu-latest
     steps:
-      - name: Git Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Get release version
         id: get_version
-        run: |
-          echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+        run: echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
 
       - name: Get fix version
         id: get_fix_version
@@ -52,7 +50,7 @@ jobs:
 
       - name: Build and push Docker
         run: |
-          docker build -t cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }}__fix${{ env.FIX_VERSION }} -t cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }}_latest .
+          docker build -t cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }} -t cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }}_latest .
           docker push cr.yandex/${{ vars.CR_ID }}/app --all-tags
 
       - name: Configure Git
@@ -70,18 +68,20 @@ jobs:
           .RELEASE_VERSION}}_fix${{ env.FIX_VERSION }}"
           git push origin v${{ env.RELEASE_VERSION }}_fix${{ env.FIX_VERSION }}
 
-      - name: Get previous tag commits
+      - name: Get commit list
         id: get_commit_list
         run: |
           git fetch
           git branch --set-upstream-to origin/v${{ env.RELEASE_VERSION }}_fix${{ env.FIX_VERSION }}
-          echo "COMMITS=$(git log ${{ env.PREV_TAG }}..v${{ env.RELEASE_VERSION }}_fix${{ env.FIX_VERSION }} --pretty=format:"%h - %an, %ar : %s")" >> $GITHUB_ENV
+          echo "COMMITS=$(git log ${{ env.PREV_TAG }}..v${{ env.RELEASE_VERSION }}_fix${{ env.FIX_VERSION }} 
+          --pretty=format:"%h - %an, %ar : %s")" >> $GITHUB_ENV
 
-      - name: Set date as env variable
-        run: echo "NOW=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
-
-      - name: Create release issue
+      - name: Add comment to issue
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          gh issue create --title "Release v${{ env.RELEASE_VERSION }}" --body "Date: ${{ env.NOW }}<br>Author: ${{ github.triggering_actor }}<br>Version: ${{ github.run_number }}<br>Commits:<br>${{ env.COMMITS }}<br>YC Docker: cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }}"
+          ISSUE_NUMBER=$(gh issue list --label release --limit 1 --json number --jq ".[0].number")
+          gh issue comment $ISSUE_NUMBER --body "Fix Release ${{ env.RELEASE_VERSION }}_fix${{ env.FIX_VERSION }} has
+          been created.<br><br>**Date:** ${{ github.event.created_at }}<br>**Author:** ${{ github.actor 
+          }}<br>**Commits:**<br>${{ env.COMMITS }}<br>**Docker Image:** cr.yandex/${{ vars.CR_ID }}/app:${{ env
+          .RELEASE_VERSION}}_fix${{ env.FIX_VERSION }}"
