@@ -38,3 +38,9 @@ jobs:
 
       - run: |
           docker build -t cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }} -t cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }}_latest .
+
+      - run: |
+          echo "${{ secrets.YANDEX_TOKEN }}" | docker login --username oauth --password-stdin cr.yandex
+
+      - run: |
+          docker push cr.yandex/${{ vars.CR_ID }}/app --all-tags
