@@ -61,7 +61,7 @@ jobs:
 
       - name: Get commits from previous tag
         run: |
-          echo "COMMITS=$(git log ${{ env.PREV_TAG }}..v${{ env.RELEASE_VERSION }} --pretty=format:"%h - %an, %ar : %s")" >> $GITHUB_ENV
+          echo "COMMITS=$(git log --pretty=format:"%h - %s" $PREV_TAG..HEAD)" >> $GITHUB_ENV
 
       - name: Set date as env variable
         run: echo "NOW=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
