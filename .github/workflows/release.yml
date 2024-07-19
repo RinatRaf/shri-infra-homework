@@ -57,11 +57,12 @@ jobs:
         run: git config advice.setUpstreamFailure false
 
       - name: Get previous tag
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+
+      - name: Get commits from previous tag
         run: |
-          git fetch
-          git branch --set-upstream-to origin/releases/${{ env.RELEASE_VERSION }}
-          PREV_TAG=$( git ls-remote --tags origin | tail -2 | head -1 | sed 's/.*\///')
-          echo "COMMITS=$(git log ${{ env.PREV_TAG }}..v${{ env.RELEASE_VERSION }} --pretty=format:"%h - %an, %ar : %s")" >> $GITHUB_ENV
+          echo "COMMITS=$(git log ${{ steps.previoustag.outputs.tag }}..v${{ env.RELEASE_VERSION }} --pretty=format:"%h - %an, %ar : %s")" >> $GITHUB_ENV
 
       - name: Create issue
         uses: JasonEtco/create-an-issue@v2
