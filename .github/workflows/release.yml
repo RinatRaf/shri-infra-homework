@@ -53,6 +53,9 @@ jobs:
           git tag v${{ env.RELEASE_VERSION }}
           git push origin v${{ env.RELEASE_VERSION }}
 
+      - name: Git Checkout
+        uses: actions/checkout@v4
+
       - name: Get previous tag
         run: |
           git fetch
