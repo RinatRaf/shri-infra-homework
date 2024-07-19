@@ -65,7 +65,7 @@ jobs:
 
       - name: Get previous tag commits
         run: |
-          LATEST_TAG=$(git describe --tags --abbrev=0 || true)
+          LATEST_TAG=$(git describe --tags --abbrev=0 HEAD^ || true)
 
           if [ "$LATEST_TAG" = "" ]; then
             COMMIT_LOG=$(git log HEAD)
