@@ -1,3 +1,7 @@
+---
+title: Release ${{ github.run_number }}
+---
+
 Date: {{ github.event.created_at}}
 Author: {{ tools.context.actor }}
 Version: ${{ github.run_number }}
