@@ -58,7 +58,7 @@ jobs:
 
       - name: Get previous tag commits
         run: |
-          PREV_TAG=$( git ls-remote --tags origin | tail -2 | head -1 | sed 's/.*\///')
+          LATEST_TAG=$( git ls-remote --tags origin | tail -2 | head -1 | sed 's/.*\///')
 
           if [ "$LATEST_TAG" = "" ]; then
             COMMIT_LOG=$(git log HEAD)
