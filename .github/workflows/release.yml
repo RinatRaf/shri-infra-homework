@@ -76,6 +76,7 @@ jobs:
         uses: dacbd/create-issue-action@main
         with:
           token: ${{ github.token }}
+          labels: release
           title: Release ${{github.run_number}}
           body: |
             - Date: ${{env.NOW}}
