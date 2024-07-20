@@ -40,7 +40,8 @@ jobs:
         run: echo "FIX_VERSION=${{ github.run_number }}" >> $GITHUB_ENV
 
       - uses: actions/checkout@v4
-        ref: "releases/${{ env.RELEASE_VERSION }}"
+        with:
+          ref: "releases/${{ env.RELEASE_VERSION }}"
 
       - name: Log in to Container Registry
         run: echo "${{ secrets.YANDEX_TOKEN }}" | docker login --username oauth --password-stdin cr.yandex
