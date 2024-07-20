@@ -78,7 +78,7 @@ jobs:
 
       - name: Add comment to issue
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ISSUE_NUMBER=$(gh issue list --label release --limit 1 --json number --jq ".[0].number")
           gh issue comment $ISSUE_NUMBER --body "Fix Release ${{ env.RELEASE_VERSION }}_fix${{ env.FIX_VERSION }} has
