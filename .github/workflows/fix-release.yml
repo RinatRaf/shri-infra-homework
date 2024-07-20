@@ -43,9 +43,7 @@ jobs:
 
       - name: Checkout release branch
         run: |
-          git status
-          git branch
-          git checkout releases/${{ env.RELEASE_VERSION }}
+          git checkout origin/releases/${{ env.RELEASE_VERSION }}
 
       - name: Log in to Container Registry
         run: echo "${{ secrets.YANDEX_TOKEN }}" | docker login --username oauth --password-stdin cr.yandex
