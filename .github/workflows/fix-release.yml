@@ -31,8 +31,6 @@ jobs:
     needs: [checks]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-
       - name: Get release version
         id: get_version
         run: echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
@@ -41,9 +39,8 @@ jobs:
         id: get_fix_version
         run: echo "FIX_VERSION=${{ github.run_number }}" >> $GITHUB_ENV
 
-      - name: Checkout release branch
-        run: |
-          git checkout origin/releases/${{ env.RELEASE_VERSION }}
+      - uses: actions/checkout@v4
+        ref: "releases/${{ env.RELEASE_VERSION }}"
 
       - name: Log in to Container Registry
         run: echo "${{ secrets.YANDEX_TOKEN }}" | docker login --username oauth --password-stdin cr.yandex
