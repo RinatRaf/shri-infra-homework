@@ -48,7 +48,7 @@ jobs:
 
       - name: Build and push Docker
         run: |
-          docker build -t cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }} -t cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }}_latest .
+          docker build -t cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }}_fix${{ env.FIX_VERSION }} -t cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }}_latest .
           docker push cr.yandex/${{ vars.CR_ID }}/app --all-tags
 
       - name: Configure Git
