@@ -54,21 +54,13 @@ jobs:
         with:
           ref: releases/${{ github.run_number }}
 
-      - name: Login to Yandex Container Registry
-        env:
-          YC_TOKEN: ${{ secrets.YC_TOKEN }}
-        run: |
-          echo $YC_TOKEN | docker login -u oauth --password-stdin cr.yandex
+      - name: Log in to Container Registry
+        run: echo "${{ secrets.YANDEX_TOKEN }}" | docker login --username oauth --password-stdin cr.yandex
 
-      - name: Build Docker image
+      - name: Build and push Docker
         run: |
-          docker build -t cr.yandex/<идентификатор_реестра>/app:${{ github.run_number }} .
-          docker tag cr.yandex/<идентификатор_реестра>/app:${{ github.run_number }} cr.yandex/<идентификатор_реестра>/app:${{ github.run_number }}_latest
-
-      - name: Push Docker image
-        run: |
-          docker push cr.yandex/<идентификатор_реестра>/app:${{ github.run_number }}
-          docker push cr.yandex/<идентификатор_реестра>/app:${{ github.run_number }}_latest
+          docker build -t cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }} -t cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }}_latest .
+          docker push cr.yandex/${{ vars.CR_ID }}/app --all-tags
 
   create-github-tag:
     runs-on: ubuntu-latest
@@ -105,7 +97,7 @@ jobs:
             **Version:** ${{ github.run_number }}
             **Commits since last release:** 
             ${{ steps.commits.outputs.commits }}
-            **Docker image:** [cr.yandex/<идентификатор_реестра>/app:${{ github.run_number }}](cr.yandex/<идентификатор_реестра>/app:${{ github.run_number }})
+            **Docker image:** [cr.yandex/${{ vars.CR_ID }}/app:${{ github.run_number }}](cr.yandex/${{ vars.CR_ID }}/app:${{ github.run_number }})
 
   update-changelog:
     runs-on: ubuntu-latest
