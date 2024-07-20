@@ -64,7 +64,7 @@ jobs:
 
       - name: Create fix tag
         run: |
-          git tag -a v${{ env.RELEASE_VERSION }}_fix${{ env.FIX_VERSION }}
+          git tag -a v${{ env.RELEASE_VERSION }}_fix${{ env.FIX_VERSION }} -m "for ${{ env.RELEASE_VERSION }} fix ${{ env.FIX_VERSION }}"
           git push origin v${{ env.RELEASE_VERSION }}_fix${{ env.FIX_VERSION }}
 
       - name: Get list of commits
