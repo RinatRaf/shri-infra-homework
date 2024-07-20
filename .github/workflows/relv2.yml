@@ -72,8 +72,8 @@ jobs:
       - name: Create GitHub tag
         run: |
           git fetch --all
-          git tag ${ { github.run_number }} origin/main
-          git push origin ${ { github.run_number }}
+          git tag ${{ github.run_number }} origin/main
+          git push origin ${{ github.run_number }}
 
   create-release-issue:
     runs-on: ubuntu-latest
