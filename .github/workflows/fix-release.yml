@@ -43,7 +43,7 @@ jobs:
 
       - name: Checkout release branch
         run: |
-          git checkout -b releases/${{ env.RELEASE_VERSION }}
+          git checkout releases/${{ env.RELEASE_VERSION }}
 
       - name: Log in to Container Registry
         run: echo "${{ secrets.YANDEX_TOKEN }}" | docker login --username oauth --password-stdin cr.yandex
@@ -59,22 +59,24 @@ jobs:
           git config --global user.name "rinatRafikov"
 
       - name: Get previous release tag
-        id: get_prev_tag
-        run: echo "PREV_TAG=$( git ls-remote --tags origin | tail -2 | head -1 | sed 's/.*\///')" >> $GITHUB_ENV
+        id: get-previous-tag
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ || echo "No previous tag")
+          echo "PREV_TAG=$PREV_TAG" >> $GITHUB_ENV
 
       - name: Create fix tag
         run: |
-          git tag -a v${{ env.RELEASE_VERSION }}_fix${{ env.FIX_VERSION }} -m "fix release ${{ env
-          .RELEASE_VERSION}}_fix${{ env.FIX_VERSION }}"
+          git tag -a v${{ env.RELEASE_VERSION }}_fix${{ env.FIX_VERSION }}
           git push origin v${{ env.RELEASE_VERSION }}_fix${{ env.FIX_VERSION }}
 
-      - name: Get commit list
-        id: get_commit_list
+      - name: Get list of commits
         run: |
-          git fetch
-          git branch --set-upstream-to origin/v${{ env.RELEASE_VERSION }}_fix${{ env.FIX_VERSION }}
-          echo "COMMITS=$(git log ${{ env.PREV_TAG }}..v${{ env.RELEASE_VERSION }}_fix${{ env.FIX_VERSION }} 
-          --pretty=format:"%h - %an, %ar : %s")" >> $GITHUB_ENV
+          if [ "${{ env.PREV_TAG }}" != "No previous tag" ]; then
+            COMMITS=$(git log --pretty=format:"%h - %s" ${{ env.PREV_TAG }}..HEAD)
+          else
+            COMMITS=$(git log --pretty=format:"%h - %s" HEAD)
+          fi
+          echo "COMMITS=$COMMITS" >> $GITHUB_ENV
 
       - name: Add comment to issue
         env:
