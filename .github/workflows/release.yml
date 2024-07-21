@@ -69,8 +69,8 @@ jobs:
         run: |
           git fetch
           git branch --set-upstream-to origin/releases/${{ env.RELEASE_VERSION }}
-          git log ${{ env.PREV_TAG }}..v${{ env.RELEASE_VERSION }} --pretty=oneline
-          echo "COMMITS=$(git log ${{ env.PREV_TAG }}..v${{ env.RELEASE_VERSION }} --pretty=format:"%h - %an, %ar : %s")" >> $GITHUB_ENV
+          git log ${{ env.PREV_TAG }}..v${{ env.RELEASE_VERSION }} --al --pretty=oneline
+          echo "COMMITS=$(git log ${{ env.PREV_TAG }}..v${{ env.RELEASE_VERSION }} --all --pretty=format:"%h - %an, %ar : %s")" >> $GITHUB_ENV
 
       - name: Set date as env variable
         run: echo "NOW=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
