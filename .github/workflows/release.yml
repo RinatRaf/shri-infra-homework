@@ -79,7 +79,7 @@ jobs:
       - name: Set date as env variable
         run: echo "NOW=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
 
-      - name: Create issue
+      - name: Create issu
         uses: dacbd/create-issue-action@main
         with:
           token: ${{ github.token }}
