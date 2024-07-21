@@ -29,7 +29,7 @@ jobs:
         uses: actions/github-script@v3
         with:
           script: |
-            const releaseVersion = 31;
+            const releaseVersion = context.payload.inputs.version;
             const { data: issues } = await github.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
