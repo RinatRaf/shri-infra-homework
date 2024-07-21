@@ -45,8 +45,8 @@ jobs:
 
       - name: Build and push Docker
         run: |
-          docker build -t cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }} -t cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }}_latest .
-          docker push cr.yandex/${{ vars.CR_ID }}/app --all-tags
+          echo docker build -t cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }} -t cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }}_latest .
+          echo docker push cr.yandex/${{ vars.CR_ID }}/app --all-tags
 
       - name: Configure Git
         run: |
@@ -55,7 +55,14 @@ jobs:
 
       - name: Get previous release tag
         id: get_prev_tag
-        run: echo "PREV_TAG=$( git tag -l --sort v:refname | tail -1 )" >> $GITHUB_ENV
+        run: |
+          echo Fetch
+          git fetch
+          echo For each ref
+          git for-each-ref --sort=creatordate --format '%(refname)' refs/tags | tail -1 | sed 's/refs\/tags\///g'
+          echo Tag list
+          git tag -l --sort v:refname
+          echo "PREV_TAG=$( git tag -l --sort v:refname | tail -1 )" >> $GITHUB_ENV
 
       - name: Add tag and push
         run: |
