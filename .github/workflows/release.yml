@@ -102,7 +102,7 @@ jobs:
           tag_name="v${{ github.run_number }}"
           prev_tag=$(git describe --tags --abbrev=0 HEAD^)
           commits=$(git log --pretty=format:'- %h%x09%an%x09%ad%x09%s%n' $prev_tag..$tag_name)
-          echo "## Release ${{ github.run_number }} - $(date +%Y-%m-%d)\n$commits\n\n" > temp_CHANGELOG.md
+          echo -e "## Release ${{ github.run_number }} - $(date +%Y-%m-%d)\n$commits\n\n" > temp_CHANGELOG.md
           cat CHANGELOG.md >> temp_CHANGELOG.md
           rm CHANGELOG.md
           mv temp_CHANGELOG.md CHANGELOG.md
