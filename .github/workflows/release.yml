@@ -73,7 +73,7 @@ jobs:
           commits=$(git log --pretty=format:'%h%x09%an%x09%ad%x09%s%n' $prev_tag..$tag_name)
           echo $commits
           echo 'COMMITS<<EOF' >> $GITHUB_ENV
-          echo $(git log --pretty=format:'%h%x09%an%x09%ad%x09%s' $prev_tag..$tag_name) >> $GITHUB_ENV
+          echo $(git log --pretty=format:'%h%x09%an%x09%ad%x09%s%n' $prev_tag..$tag_name) >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
 
       - name: Set date as env variable
