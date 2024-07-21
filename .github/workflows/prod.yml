@@ -1,0 +1,51 @@
+name: Release Production
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        type: string
+        required: true
+        description: "Version to release"
+
+jobs:
+  run_docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH and deploy to prod
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.LOGIN }}
+          key: ${{ secrets.PRIVATE_KEY }}
+          script: |
+            echo ${{ secrets.YANDEX_TOKEN }} | docker login --username oauth --password-stdin cr.yandex
+
+            docker pull cr.yandex/${{vars.CR_ID}}/app:${{ inputs.version }}_latest
+            docker kill $(docker ps -q)
+            docker rm $(docker ps -a -q)
+            docker run -d --restart unless-stopped -p 3000:3000 cr.yandex/${{vars.CR_ID}}/app:${{ inputs.version }}_latest
+
+      - name: Add comment to the appropriate GitHub Issue
+        uses: actions/github-script@v3
+        with:
+          script: |
+            const releaseVersion = context.payload.inputs.version;
+            const { data: issues } = await github.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open'
+            });
+            const releaseIssue = issues.find(issue => issue.title.includes(`Release ${releaseVersion}`));
+
+            if (!releaseIssue) {
+              throw new Error(`Issue for release version ${releaseVersion} not found`);
+            }
+
+            const comment = `Release version ${releaseVersion} has been deployed to production on ${new Date().toISOString()} by ${context.actor}.`;
+
+            await github.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: releaseIssue.number,
+              body: comment
+            });
