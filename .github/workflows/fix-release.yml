@@ -1,0 +1,90 @@
+name: Fix Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version to fix"
+        required: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        task: [lint, test]
+        node-version: [20.x]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - run: npm install
+
+      - if: matrix.task == 'lint'
+        run: npm run lint
+
+      - if: matrix.task == 'test'
+        run: npm run test
+  fix-release:
+    needs: [checks]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get release version
+        id: get_version
+        run: echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+
+      - name: Get fix version
+        id: get_fix_version
+        run: echo "FIX_VERSION=${{ github.run_number }}" >> $GITHUB_ENV
+
+      - uses: actions/checkout@v4
+        with:
+          ref: "releases/${{ env.RELEASE_VERSION }}"
+
+      - name: Log in to Container Registry
+        run: echo "${{ secrets.YANDEX_TOKEN }}" | docker login --username oauth --password-stdin cr.yandex
+
+      - name: Build and push Docker
+        run: |
+          docker build -t cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }}_fix${{ env.FIX_VERSION }} -t cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }}_latest .
+          docker push cr.yandex/${{ vars.CR_ID }}/app --all-tags
+
+      - name: Configure Git
+        run: |
+          git config --global user.email "rinat.rafikov5@yandex.ru"
+          git config --global user.name "Rafikov Rinat"
+
+      - name: Create fix tag
+        run: |
+          git tag -a v${{ env.RELEASE_VERSION }}_fix${{ env.FIX_VERSION }} -m "for ${{ env.RELEASE_VERSION }} fix ${{ env.FIX_VERSION }}"
+          git push origin v${{ env.RELEASE_VERSION }}_fix${{ env.FIX_VERSION }} --tags
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get previous tag commits
+        id: get_commit_list
+        run: |
+          tag_name="v${{ env.RELEASE_VERSION }}_fix${{ env.FIX_VERSION }}"
+          prev_tag=$(git tag -l --sort=v:refname | tail -2 | head -1)
+          commits=$(git log --pretty=format:'- %h%x09%an%x09%ad%x09%s%n' $prev_tag..$tag_name)
+          echo 'COMMITS<<EOF' >> $GITHUB_ENV
+          echo $(git log --pretty=format:'- %h%x09%an%x09%ad%x09%s%n' $prev_tag..$tag_name) >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+
+      - name: Set date as env variable
+        run: echo "NOW=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
+
+      - name: Add comment to issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE_NUMBER=$(gh issue list --label release --limit 1 --json number --jq ".[0].number")
+          gh issue comment $ISSUE_NUMBER --body "Fix Release ${{ env.RELEASE_VERSION }}_fix${{ env.FIX_VERSION }} has
+          been created.<br><br>**Date:** ${{ env.NOW }}<br>**Author:** ${{ github.actor 
+          }}<br>**Commits:**<br>${{ env.COMMITS }}<br>**Docker Image:** cr.yandex/${{ vars.CR_ID }}/app:${{ env
+          .RELEASE_VERSION}}_fix${{ env.FIX_VERSION }}"
