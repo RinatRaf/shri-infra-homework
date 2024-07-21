@@ -35,7 +35,7 @@ jobs:
               repo: context.repo.repo,
               state: 'open'
             });
-
+            console.log(releaseVersion)
             const releaseIssue = issues.find(issue => issue.title.includes(`Release ${releaseVersion}`));
 
             if (!releaseIssue) {
