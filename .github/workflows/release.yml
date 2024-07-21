@@ -89,10 +89,22 @@ jobs:
             - Commits: ${{ env.COMMITS }}
             - YC Docker: cr.yandex/${{ vars.CR_ID }}/app:${{ github.run_number }}
 
-      - name: Checkout code
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_KEY }}
+
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+
       - name: Add Changelog
         run: |
           git checkout main
