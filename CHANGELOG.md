@@ -1,3 +1,8 @@
+## Release 50 - 2024-07-21\n- 940b26d	Rafikov Rinat	Sun Jul 21 22:45:25 2024 +0500	213312
+
+- 35ddec5	Rafikov Rinat	Sun Jul 21 22:45:00 2024 +0500	12321
+
+- 3c64269	rinatRafikov	Sun Jul 21 17:42:34 2024 +0000	Update CHANGELOG.md for release 49\n\n
 ## Release 49 - 2024-07-21\n- a4b710c	Rafikov Rinat	Sun Jul 21 22:41:47 2024 +0500	2
 
 - f6cad20	rinatRafikov	Sun Jul 21 17:39:19 2024 +0000	Update CHANGELOG.md for release 48\n\n
