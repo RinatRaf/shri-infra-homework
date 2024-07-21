@@ -55,7 +55,7 @@ jobs:
 
       - name: Get previous release tag
         id: get_prev_tag
-        run: echo "PREV_TAG=$( git ls-remote --tags origin | tail -2 | head -1 | sed 's/.*\///')" >> $GITHUB_ENV
+        run: echo "PREV_TAG=$( git for-each-ref --sort=creatordate --format '%(refname)' refs/tags | tail -1 | sed 's/refs\/tags\///g')" >> $GITHUB_ENV
 
       - name: Add tag and push
         run: |
