@@ -67,7 +67,7 @@ jobs:
       - name: Get previous tag commits
         id: get_commit_list
         run: |
-          git fetc
+          git fetch
           git branch --set-upstream-to origin/releases/${{ env.RELEASE_VERSION }}
           git log ${{ env.PREV_TAG }}..v${{ env.RELEASE_VERSION }} --pretty=oneline
           echo "COMMITS=$(git log ${{ env.PREV_TAG }}..v${{ env.RELEASE_VERSION }} --pretty=format:"%h - %an, %ar : %s")" >> $GITHUB_ENV
