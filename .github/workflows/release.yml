@@ -53,24 +53,26 @@ jobs:
           git config --global user.email "rinat.rafikov5@yandex.ru"
           git config --global user.name "rinatRafikov"
 
-      - name: Get previous release tag
-        id: get_prev_tag
-        run: |
-          git fetch
-          echo "PREV_TAG=$( git tag -l --sort v:refname | tail -1 )" >> $GITHUB_ENV
-
       - name: Add tag and push
         run: |
           git tag -a v${{ env.RELEASE_VERSION }} -m "release ${{ env.RELEASE_VERSION }}"
-          git push origin v${{ env.RELEASE_VERSION }}
+          git push origin v${{ env.RELEASE_VERSION }} --tags
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Get previous tag commits
         id: get_commit_list
         run: |
-          git fetch
-          git branch --set-upstream-to origin/releases/${{ env.RELEASE_VERSION }}
-          git log ${{ env.PREV_TAG }}..v${{ env.RELEASE_VERSION }} --all --pretty=oneline
-          echo "COMMITS=$(git log ${{ env.PREV_TAG }}..v${{ env.RELEASE_VERSION }} --all --pretty=format:"%h - %an, %ar : %s")" >> $GITHUB_ENV
+          tag_name="v${{ github.run_number }}
+          echo tag_name $tag_name
+          prev_tag=$(git describe --tags --abbrev=0 HEAD^)
+          echo prev_tag $prev_tag
+          commits=$(git log --pretty=format:'%h%x09%an%x09%ad%x09%s' $prev_tag..$tag_name)
+          echo commits
+          echo "COMMITS=$(git log --pretty=format:'%h%x09%an%x09%ad%x09%s' $prev_tag..$tag_name)" >> $GITHUB_ENV
 
       - name: Set date as env variable
         run: echo "NOW=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
