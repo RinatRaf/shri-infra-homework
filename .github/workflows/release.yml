@@ -24,18 +24,85 @@ jobs:
       - if: matrix.task == 'test'
         run: npm run test
   release:
-    needs: checks
+    needs: [checks]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Git Checkout
+        uses: actions/checkout@v3
 
-      - run: |
+      - name: Get release version
+        id: get_version
+        run: |
           echo "RELEASE_VERSION=${{ github.run_number }}" >> $GITHUB_ENV
-          shell: bash
 
-      - run: |
-          git checkout -b release/$RELEASE_VERSION
-          git push origin release/$RELEASE_VERSION
+      - name: Create release branch
+        run: |
+          git checkout -b releases/${{ env.RELEASE_VERSION }}
+          git push origin releases/${{ env.RELEASE_VERSION }}
 
-      - run: |
-          docker build -t cr.yandex/${{ vars.CR_ID }}/app:$RELEASE_VERSION -t cr.yandex/${{ vars.CR_ID }}/app:$RELEASE_VERSION_latest .
+      - name: Log in to Container Registry
+        run: echo "${{ secrets.YANDEX_TOKEN }}" | docker login --username oauth --password-stdin cr.yandex
+
+      - name: Build and push Docker
+        run: |
+          docker build -t cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }} -t cr.yandex/${{ vars.CR_ID }}/app:${{ env.RELEASE_VERSION }}_latest .
+          docker push cr.yandex/${{ vars.CR_ID }}/app --all-tags
+
+      - name: Configure Git
+        run: |
+          git config --global user.email "rinat.rafikov5@yandex.ru"
+          git config --global user.name "Rafikov Rinat"
+
+      - name: Add tag and push
+        run: |
+          git tag -a v${{ env.RELEASE_VERSION }} -m "release ${{ env.RELEASE_VERSION }}"
+          git push origin v${{ env.RELEASE_VERSION }} --tags
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get previous tag commits
+        id: get_commit_list
+        run: |
+          tag_name="v${{ github.run_number }}"
+          prev_tag=$(git describe --tags --abbrev=0 HEAD^)
+          commits=$(git log --pretty=format:'- %h%x09%an%x09%ad%x09%s%n' $prev_tag..$tag_name)
+          echo 'COMMITS<<EOF' >> $GITHUB_ENV
+          echo $(git log --pretty=format:'- %h%x09%an%x09%ad%x09%s%n' $prev_tag..$tag_name) >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+
+      - name: Set date as env variable
+        run: echo "NOW=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
+
+      - name: Create issue
+        uses: dacbd/create-issue-action@main
+        with:
+          token: ${{ github.token }}
+          labels: release
+          title: Release ${{github.run_number}}
+          body: |
+            - Date: ${{env.NOW}}
+            - Author: ${{ github.triggering_actor }}
+            - Version: ${{ github.run_number }}
+            - Commits: ${{ env.COMMITS }}
+            - YC Docker: cr.yandex/${{ vars.CR_ID }}/app:${{ github.run_number }}
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Add Changelog
+        run: |
+          git checkout main
+          tag_name="v${{ github.run_number }}"
+          prev_tag=$(git describe --tags --abbrev=0 HEAD^)
+          commits=$(git log --pretty=format:'- %h%x09%an%x09%ad%x09%s%n' $prev_tag..$tag_name)
+          echo -e "## Release ${{ github.run_number }} - $(date +%Y-%m-%d)\n$commits\n\n" > temp_CHANGELOG.md
+          cat CHANGELOG.md >> temp_CHANGELOG.md
+          rm CHANGELOG.md
+          mv temp_CHANGELOG.md CHANGELOG.md
+          git add CHANGELOG.md
+          git commit -m "Update CHANGELOG.md for release ${{ github.run_number }}"
+          git push origin main
