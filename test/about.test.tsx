@@ -6,6 +6,6 @@ describe("About", () => {
   it("Should render author name", () => {
     const { container } = render(<About />);
 
-    expect(container.textContent).toBe("AboutAuthor: Rafikov ");
+    expect(container.textContent).toBe("AboutAuthor: Rafikov Rinat");
   });
 });
