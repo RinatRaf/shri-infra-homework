@@ -67,9 +67,12 @@ jobs:
         run: |
           git fetch
           git branch --set-upstream-to origin/releases/${{ env.RELEASE_VERSION }}
-          git for-each-ref --sort=creatordate --format '%(refname)' refs/tags | tail -1 | sed 's/refs\/tags\///g'
-          echo ${{ env.PREV_TAG }}
-          echo ${{ env.PREV_TAG }}..v${{ env.RELEASE_VERSION }}
+          echo git status
+          git status
+          echo git for each ref
+          git for-each-ref --sort=creatordate --format '%(refname)' refs/tags
+          echo Prev tag: ${{ env.PREV_TAG }}
+          echo Release version: v${{ env.RELEASE_VERSION }}
           echo "COMMITS=$(git log ${{ env.PREV_TAG }}..v${{ env.RELEASE_VERSION }} --pretty=format:"%h - %an, %ar : %s")" >> $GITHUB_ENV
 
       - name: Set date as env variable
