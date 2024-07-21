@@ -56,6 +56,12 @@ jobs:
       - name: Get previous release tag
         id: get_prev_tag
         run: |
+          echo Fetch
+          git fetch
+          echo For each ref
+          git for-each-ref --sort=creatordate --format '%(refname)' refs/tags | tail -1 | sed 's/refs\/tags\///g'
+          echo Tag lis
+
           echo "PREV_TAG=$( git tag -l --sort v:refname | tail -1 )" >> $GITHUB_ENV
 
       - name: Add tag and push
@@ -66,7 +72,6 @@ jobs:
       - name: Get previous tag commits
         id: get_commit_list
         run: |
-          git fetch
           git branch --set-upstream-to origin/releases/${{ env.RELEASE_VERSION }}
           git log ${{ env.PREV_TAG }}..v${{ env.RELEASE_VERSION }} --pretty=oneline
           echo "COMMITS=$(git log ${{ env.PREV_TAG }}..v${{ env.RELEASE_VERSION }} --pretty=format:"%h - %an, %ar : %s")" >> $GITHUB_ENV
